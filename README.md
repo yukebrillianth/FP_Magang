@@ -36,11 +36,27 @@ _(run in workspace directory)_
 catkin_make
 ```
 
-run the launcher
+run the rosbridge launcher
 
 ```bash
+source devel/setup.zsh
 roslaunch rosbridge_server rosbridge_websocket.launch
-rosrun FP_Magang robot_publisher
+```
+
+open new terminal tab and run controller
+```bash
+source devel/setup.zsh
+rosrun FP_Magang robot_controller
+```
+
+open new terminal tab and run image picker
+```bash
+source devel/setup.zsh
 rosrun FP_Magang image_picker
+```
+
+open new terminal tab and run image processor
+```bash
+source devel/setup.zsh
 rosrun FP_Magang image_processor
 ```
