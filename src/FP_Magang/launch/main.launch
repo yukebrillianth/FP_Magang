@@ -1,5 +1,0 @@
-<launch>
-    <node name="robot_publisher" pkg="FP_Magang" type="robot_publisher" output="screen" />
-    <node name="image_picker" pkg="FP_Magang" type="image_picker" output="screen" />
-    <node name="image_processor" pkg="FP_Magang" type="image_processor" output="screen" />
-</launch>

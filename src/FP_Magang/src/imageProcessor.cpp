@@ -90,9 +90,9 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "image_processor");
     ros::NodeHandle nh;
 
-    ball_pos_pub = nh.advertise<FP_Magang::ballPos>("/ballPos", 50);
+    ball_pos_pub = nh.advertise<FP_Magang::ballPos>("/ballPosition", 1);
 
-    ros::Subscriber sub = nh.subscribe<sensor_msgs::Image>("/toImageProcessor", 50, imageProcessorCb);
+    ros::Subscriber sub = nh.subscribe<sensor_msgs::Image>("/toImageProcessor", 1, imageProcessorCb);
 
     ros::spin();
     return 0;
