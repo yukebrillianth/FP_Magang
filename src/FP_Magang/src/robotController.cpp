@@ -258,23 +258,37 @@ public:
         if (keyControl)
         {
             float ct = -bsMsg.th;
+            float sinus = sin(degToRad(ct));
+            float cosinus = cos(degToRad(ct));
 
-            x = (x * cos(degToRad(ct))) + (y * -sin(degToRad(ct)));
-            y = (x * sin(degToRad(ct))) + (y * cos(degToRad(ct)));
+            float tempX = x;
+            float tempY = y;
+
+            x = (tempX * cosinus) + (tempY * -sinus);
+            y = (tempX * sinus) + (tempY * cosinus);
         }
 
-        interval = (!keyControl && interval < 1) ? (interval + 0.02) : 1;
+        if (!keyControl && interval < 1)
+        {
+            interval += 0.02;
+        }
+        else
+        {
+            interval = 1;
+        }
 
         // Pembatas lapangan
         int fieldWidth = 1016, fieldHeight = 716;
         float batasX = fieldWidth - 58 * 2;
         float batasY = fieldHeight - 58 * 2;
-
         if (((robot_x + (x / 50)) < 0) || ((robot_x + (x / 50)) > batasX))
+        {
             x = 0;
-
+        }
         if (((robot_y + (y / 50)) < 0) || ((robot_y + (y / 50)) > batasY))
+        {
             y = 0;
+        }
 
         (round(x) == 0) ? x = 0 : x = x;
         (round(y) == 0) ? y = 0 : y = y;
