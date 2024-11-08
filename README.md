@@ -60,3 +60,6 @@ open new terminal tab and run image processor
 source devel/setup.zsh
 rosrun FP_Magang image_processor
 ```
+
+open base station
+[Base Station Online](https://bs-magang.pages.dev/)
