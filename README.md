@@ -5,6 +5,9 @@
 
 This project is related to the task as an intern software engineer in the Robotics UKM Research Team (IRIS) week 4, Final Project.
 
+## How It Works
+![alt text](Untitled.png)
+
 ## How to Use
 
 ### 1. Installation
