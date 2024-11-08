@@ -130,29 +130,14 @@ private:
         updateRobotPos(msg.enc_left, msg.enc_right);
     }
 
-public:
-    FP_Magang::BS2PC bsMsg;
-    FP_Magang::PC2BS msg;
-
-    float robot_x = 0, robot_y = 0;
-    float ball_x = 0, ball_y = 0;
-    float dest_x = 0, dest_y = 0;
-
-    int step = 0;
-    bool isGrab = false;
-    bool keyControl = false;
-
-    RobotController()
+    /**
+     * @brief Ball pos sub cb
+     *
+     * @param msg
+     */
+    void ballPosHandler(const FP_Magang::ballPos &msg)
     {
-        // Init pub sub
-        pc2bs_pub = nh.advertise<FP_Magang::PC2BS>("/pc2bs", 50);
-        bs2pc_sub = nh.subscribe("/bs2pc", 10, &RobotController::baseStationHandler, this);
-        toImagePicker_pub = nh.advertise<std_msgs::Bool>("/toImagePicker", 1);
-        ballPosition_sub = nh.subscribe("/ballPosition", 10, &RobotController::destinationHandler, this);
-    }
-
-    void destinationHandler(const FP_Magang::ballPos &msg)
-    {
+        // Set ball pos to image pos
         ball_x = msg.x;
         ball_y = msg.y;
 
@@ -171,6 +156,27 @@ public:
 
             step = 1;
         }
+    }
+
+public:
+    FP_Magang::BS2PC bsMsg;
+    FP_Magang::PC2BS msg;
+
+    float robot_x = 0, robot_y = 0;
+    float ball_x = 0, ball_y = 0;
+    float dest_x = 0, dest_y = 0;
+
+    int step = 0;
+    bool isGrab = false;
+    bool keyControl = false;
+
+    RobotController()
+    {
+        // Init pub sub
+        pc2bs_pub = nh.advertise<FP_Magang::PC2BS>("/pc2bs", 50);
+        bs2pc_sub = nh.subscribe("/bs2pc", 10, &RobotController::baseStationHandler, this);
+        toImagePicker_pub = nh.advertise<std_msgs::Bool>("/toImagePicker", 1);
+        ballPosition_sub = nh.subscribe("/ballPosition", 10, &RobotController::ballPosHandler, this);
     }
 
     /**
@@ -215,10 +221,9 @@ public:
 
     void kickBall(float distance)
     {
-        FP_Magang::PC2BS msg;
         float ct = bsMsg.th;
-        float x = ball_x + (distance * sin(ct * M_PI / 180));
-        float y = ball_y + (distance * cos(ct * M_PI / 180));
+        float x = ball_x + (distance * sin(degToRad(ct)));
+        float y = ball_y + (distance * cos(degToRad(ct)));
 
         if (x + 27.7430 < 0)
         {
@@ -241,6 +246,7 @@ public:
         ball_x = x;
         ball_y = y;
 
+        FP_Magang::PC2BS msg;
         msg.bola_x = x;
         msg.bola_y = y;
         pc2bs_pub.publish(msg);
@@ -249,43 +255,26 @@ public:
 
     void setMotorSpeed(float x, float y, float theta)
     {
-        FP_Magang::PC2BS msg;
         if (keyControl)
         {
             float ct = -bsMsg.th;
-            float sinus = sin(ct * M_PI / 180);
-            float cosinus = cos(ct * M_PI / 180);
 
-            float cx = x;
-            float cy = y;
-
-            x = (cx * cosinus) + (cy * -sinus);
-            y = (cx * sinus) + (cy * cosinus);
+            x = (x * cos(degToRad(ct))) + (y * -sin(degToRad(ct)));
+            y = (x * sin(degToRad(ct))) + (y * cos(degToRad(ct)));
         }
 
-        if (!keyControl && interval < 1)
-        {
-            interval += 0.02;
-        }
-        else
-        {
-            interval = 1;
-        }
+        interval = (!keyControl && interval < 1) ? (interval + 0.02) : 1;
 
         // Pembatas lapangan
         int fieldWidth = 1016, fieldHeight = 716;
         float batasX = fieldWidth - 58 * 2;
         float batasY = fieldHeight - 58 * 2;
+
         if (((robot_x + (x / 50)) < 0) || ((robot_x + (x / 50)) > batasX))
-        {
             x = 0;
-            // return;
-        }
+
         if (((robot_y + (y / 50)) < 0) || ((robot_y + (y / 50)) > batasY))
-        {
             y = 0;
-            // return;
-        }
 
         (round(x) == 0) ? x = 0 : x = x;
         (round(y) == 0) ? y = 0 : y = y;
@@ -301,6 +290,7 @@ public:
             return;
         }
 
+        FP_Magang::PC2BS msg;
         msg.motor1 = ((x * 2 / 3) + (y * 0) + (theta * 1 / 3)) * sigmoid(interval);
         msg.motor2 = ((x * -1 / 3) + (y * (sqrt(3) / 3)) + (theta * 1 / 3)) * sigmoid(interval);
         msg.motor3 = ((x * -1 / 3) + (y * -(sqrt(3) / 3)) + (theta * 1 / 3)) * sigmoid(interval);
@@ -394,7 +384,7 @@ public:
             return;
 
         // mendapatkan arah teta sesuai robot
-        float th = 90 - atan2(y, x) * 180 / M_PI;
+        float th = 90 - degToRad(atan2(y, x));
 
         setMotorSpeed(x, y, (th - bsMsg.th));
     }
@@ -407,8 +397,8 @@ public:
         if (x == 0 && y == 0)
             return;
 
-        // mendapatkan arah teta sesuai robot
-        float th = 90 - atan2(y, x) * 180 / M_PI;
+        // mendapatkan arah theta sesuai robot
+        float th = 90 - degToRad(atan2(y, x));
 
         setMotorSpeed(x, y, (th - bsMsg.th));
     }
@@ -424,7 +414,7 @@ public:
             keyControl = false;
             x = dest_x - robot_x;
             y = dest_y - robot_y;
-            th = 90 - (atan2(y, x) * 180 / M_PI);
+            th = 90 - (degToRad(atan2(y, x)));
             svDeg = bsMsg.th;
             setMotorSpeed(x, y, (th - (bsMsg.th)));
         }
